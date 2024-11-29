@@ -16,7 +16,7 @@ type Config struct {
 
 func NewConfig() (*Config, error) {
 	cfgPath := os.Getenv("CONFIG_PATH")
-	if cfgPath != "" {
+	if cfgPath == "" {
 		cfgPath = "config.yaml"
 	}
 
@@ -30,4 +30,11 @@ func NewConfig() (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func MustConfig(cfg *Config, err error) *Config {
+	if err != nil {
+		panic(err)
+	}
+	return cfg
 }

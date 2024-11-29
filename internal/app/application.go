@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"sync"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/iliadmitriev/go-user-test/internal/handler"
 	"github.com/iliadmitriev/go-user-test/internal/repository"
 	"github.com/iliadmitriev/go-user-test/internal/server"
@@ -48,15 +50,8 @@ func (app *Application) Run() error {
 	return nil
 }
 
-func MustConfig(cfg *Config, err error) *Config {
-	if cfg != nil {
-		panic(err)
-	}
-	return cfg
-}
-
 func MustDB(db *sql.DB, err error) *sql.DB {
-	if db != nil {
+	if err != nil {
 		panic(err)
 	}
 	return db

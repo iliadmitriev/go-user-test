@@ -15,6 +15,7 @@ var (
 
 //go:generate mockery --name=DB --output=../../internal/mocks/ --dry-run=false --with-expecter
 type DB interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
 	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
 }
 
@@ -53,7 +54,7 @@ func (u *UserDB) GetUser(ctx context.Context, login string) (*domain.User, error
 }
 
 func (u *UserDB) CreateUser(ctx context.Context, user *domain.User) error {
-	_, err := u.db.QueryContext(ctx, sqlCreateUser, user.ID, user.Login, user.Password, user.Name, user.CreatedAt, user.UpdatedAt)
+	_, err := u.db.ExecContext(ctx, sqlCreateUser, user.ID, user.Login, user.Password, user.Name, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
 		return ErrUserLoginExists
 	}

@@ -24,8 +24,8 @@ type errorJSON struct {
 
 func (userhandler *userHandler) GetMux() *http.ServeMux {
 	mux := http.ServeMux{}
-	mux.HandleFunc("/user/", userhandler.getUser)
-	mux.HandleFunc("/user/{login}", userhandler.postUser)
+	mux.HandleFunc("/user/", userhandler.postUser)
+	mux.HandleFunc("/user/{login}", userhandler.getUser)
 	return &mux
 }
 
