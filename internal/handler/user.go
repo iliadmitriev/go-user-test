@@ -52,7 +52,7 @@ func (userhandler *userHandler) postUser(w http.ResponseWriter, r *http.Request)
 }
 
 func (userhandler *userHandler) getUser(w http.ResponseWriter, r *http.Request) {
-	login := r.PathValue("id")
+	login := r.PathValue("login")
 
 	user, err := userhandler.userService.GetUser(r.Context(), login)
 	if err != nil {
