@@ -11,8 +11,11 @@ import (
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/iliadmitriev/go-user-test/internal/domain"
+	"github.com/iliadmitriev/go-user-test/internal/mocks"
 	"github.com/iliadmitriev/go-user-test/internal/repository"
 	"github.com/iliadmitriev/go-user-test/internal/service"
 )
@@ -118,6 +121,82 @@ func Test_userHandler_getUser_SQL_level(t *testing.T) {
 			// assert status and data
 			assert.Equal(t, tt.wantCode, w.Code, "status code not match")
 			assert.JSONEqf(t, tt.wantResp, w.Body.String(), "response body not match")
+		})
+	}
+}
+
+func Test_userHandler_getUser_Repo_level(t *testing.T) {
+	tests := []struct {
+		name      string
+		url       string
+		login     string
+		data      *domain.User
+		dataError error
+		wantCode  int
+		wantResp  string
+	}{
+		{
+			name:  "get user by login OK",
+			url:   "http://example.com/user/b",
+			login: "b",
+			data: &domain.User{
+				ID:        uuid.MustParse("70868a75-adbb-4b4d-b482-93915ee11777"),
+				Login:     "b",
+				Name:      "b",
+				CreatedAt: time.Date(2024, 11, 29, 18, 33, 55, 100, time.UTC),
+				UpdatedAt: time.Date(2024, 11, 29, 18, 33, 55, 100, time.UTC),
+			},
+			dataError: nil,
+			wantCode:  http.StatusOK,
+			wantResp: `{"id":"70868a75-adbb-4b4d-b482-93915ee11777","login":"b","name":"b",` +
+				`"created_at":"2024-11-29T18:33:55.0000001Z","updated_at":"2024-11-29T18:33:55.0000001Z"}`,
+		},
+		{
+			name:      "get user by login not found",
+			url:       "http://example.com/user/eee",
+			login:     "eee",
+			dataError: repository.ErrUserNotFound,
+			wantCode:  http.StatusNotFound,
+			wantResp:  `{"code":404,"message":"user not found"}`,
+		},
+		{
+			name:      "get user by login connection error",
+			url:       "http://example.com/user/eee",
+			login:     "eee",
+			dataError: sql.ErrConnDone,
+			wantCode:  http.StatusInternalServerError,
+			wantResp:  `{"code":500,"message":"sql: connection is already closed"}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// build whole stack mockRepo -> userService -> userHandler
+			mockUserRepo := mocks.NewUserRepository(t)
+			userService := service.NewUserService(mockUserRepo)
+			userHandler := NewUserHandler(userService)
+			handleFunc := userHandler.GetMux()
+
+			// set user repo mock
+			// response once on method `getUser`
+			mockUserRepo.On("GetUser", mock.Anything, tt.login).Return(tt.data, tt.dataError).Once()
+
+			// create new request
+			r, err := http.NewRequest("GET", tt.url, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// create test response writer
+			w := httptest.NewRecorder()
+
+			// run request
+			handleFunc.ServeHTTP(w, r)
+
+			// assert
+			require.Equal(t, tt.wantCode, w.Code, "status code not match")
 		})
 	}
 }
