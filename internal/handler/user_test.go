@@ -197,6 +197,7 @@ func Test_userHandler_getUser_Repo_level(t *testing.T) {
 
 			// assert
 			require.Equal(t, tt.wantCode, w.Code, "status code not match")
+			require.JSONEqf(t, tt.wantResp, w.Body.String(), "response body not match")
 		})
 	}
 }
