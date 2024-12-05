@@ -1,4 +1,4 @@
-create table users(
+create table users (
   id varchar(32) primary key,
   login varchar(32) unique,
   password varchar(64),

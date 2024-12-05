@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/iliadmitriev/go-user-test/internal/config"
 	"github.com/iliadmitriev/go-user-test/internal/handler"
@@ -38,7 +37,6 @@ func (srv *server) Start() {
 
 func (srv *server) Shutdown(ctx context.Context) error {
 	srv.logger.Info("Server shutting down", zap.String("addr", srv.cfg.Listen))
-	time.Sleep(1 * time.Second)
 	return srv.srv.Shutdown(ctx)
 }
 
