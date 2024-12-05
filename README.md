@@ -11,6 +11,7 @@ sqlite3 main.db < main.sql
 building
 
 ```bash
+go generate ./...
 go build cmd/main.go
 ```
 
