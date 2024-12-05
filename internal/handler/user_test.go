@@ -44,7 +44,7 @@ func Test_userHandler_getUser_SQL_level(t *testing.T) {
 				`"created_at":"2024-11-29T18:33:55.0000001Z","updated_at":"2024-11-29T18:33:55.0000001Z"}`,
 		},
 		{
-			name:       "get user by login Not found",
+			name:       "get user by login not found",
 			url:        "http://example.com/user/eee",
 			login:      "eee",
 			closeError: sql.ErrNoRows,
@@ -52,7 +52,7 @@ func Test_userHandler_getUser_SQL_level(t *testing.T) {
 			wantResp:   `{"code":404,"message":"user not found"}`,
 		},
 		{
-			name:       "get user by login tx done",
+			name:       "get user by login connection error",
 			url:        "http://example.com/user/eee",
 			login:      "eee",
 			closeError: sql.ErrConnDone,
