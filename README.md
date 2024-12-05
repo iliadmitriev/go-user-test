@@ -20,3 +20,9 @@ testing
 ```bash
 go test ./...
 ```
+
+cleanup
+
+```bash
+rm -rf internal/mocks
+```

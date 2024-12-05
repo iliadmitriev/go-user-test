@@ -3,12 +3,12 @@ module github.com/iliadmitriev/go-user-test
 go 1.23.3
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/google/uuid v1.6.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/sync v0.9.0
 )
 
 require (

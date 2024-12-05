@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 
@@ -55,8 +56,13 @@ func (userhandler *userHandler) getUser(w http.ResponseWriter, r *http.Request) 
 	login := r.PathValue("login")
 
 	user, err := userhandler.userService.GetUser(r.Context(), login)
-	if err != nil {
+	if errors.Is(err, service.ErrUserNotFound) {
 		serveErrorJSON(w, http.StatusNotFound, err)
+		return
+	}
+
+	if err != nil {
+		serveErrorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 
