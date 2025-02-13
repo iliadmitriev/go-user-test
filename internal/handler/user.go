@@ -55,7 +55,9 @@ func (userhandler *userHandler) postUser(w http.ResponseWriter, r *http.Request)
 func (userhandler *userHandler) getUser(w http.ResponseWriter, r *http.Request) {
 	login := r.PathValue("login")
 
-	user, err := userhandler.userService.GetUser(r.Context(), login)
+	ctx := r.Context()
+
+	user, err := userhandler.userService.GetUser(ctx, login)
 	if errors.Is(err, service.ErrUserNotFound) {
 		serveErrorJSON(w, http.StatusNotFound, err)
 		return

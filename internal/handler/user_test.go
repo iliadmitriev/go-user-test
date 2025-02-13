@@ -2,13 +2,15 @@ package handler
 
 import (
 	"database/sql"
-	"errors"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -20,55 +22,60 @@ import (
 	"github.com/iliadmitriev/go-user-test/internal/service"
 )
 
+type fakeUser struct {
+	ID        string    `fake:"{uuid}" json:"id"`
+	Login     string    `fake:"{username}" json:"login"`
+	Password  string    `fake:"{password}" json:"-"`
+	Name      string    `fake:"{firstname}" json:"name"`
+	CreatedAt time.Time `fake:"{date}" json:"created_at"`
+	UpdatedAt time.Time `fake:"{date}" json:"updated_at"`
+}
+
+func (u *fakeUser) toJSON(t *testing.T) string {
+	t.Helper()
+
+	data, err := json.Marshal(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return string(data)
+}
+
+func newFakeUser(t *testing.T) *fakeUser {
+	t.Helper()
+
+	u := fakeUser{}
+	if err := gofakeit.Struct(&u); err != nil {
+		t.Fatal(err)
+	}
+
+	return &u
+}
+
 func Test_userHandler_getUser_SQL_level(t *testing.T) {
 	tests := []struct {
 		name       string
-		url        string
-		login      string
-		data       *domain.User
 		closeError error
-		wantError  string
+		rowError   error
 		wantCode   int
 		wantResp   string
 	}{
 		{
-			name:  "get user by login OK",
-			url:   "http://example.com/user/b",
-			login: "b",
-			data: &domain.User{
-				ID:        uuid.MustParse("70868a75-adbb-4b4d-b482-93915ee11777"),
-				Login:     "b",
-				Name:      "b",
-				CreatedAt: time.Date(2024, 11, 29, 18, 33, 55, 100, time.UTC),
-				UpdatedAt: time.Date(2024, 11, 29, 18, 33, 55, 100, time.UTC),
-			},
+			name:     "get user by login OK",
 			wantCode: http.StatusOK,
-			wantResp: `{"id":"70868a75-adbb-4b4d-b482-93915ee11777","login":"b","name":"b",` +
-				`"created_at":"2024-11-29T18:33:55.0000001Z","updated_at":"2024-11-29T18:33:55.0000001Z"}`,
 		},
 		{
-			name:       "get user by login not found",
-			url:        "http://example.com/user/eee",
-			login:      "eee",
-			closeError: sql.ErrNoRows,
-			wantCode:   http.StatusNotFound,
-			wantResp:   `{"code":404,"message":"user not found"}`,
+			name:     "get user by login not found",
+			rowError: sql.ErrNoRows,
+			wantCode: http.StatusNotFound,
+			wantResp: `{"code":404, "message":"user not found"}`,
 		},
 		{
 			name:       "get user by login connection error",
-			url:        "http://example.com/user/eee",
-			login:      "eee",
 			closeError: sql.ErrConnDone,
 			wantCode:   http.StatusInternalServerError,
 			wantResp:   `{"code":500,"message":"sql: connection is already closed"}`,
-		},
-		{
-			name:      "get user by login SQL error",
-			login:     "eee",
-			url:       "http://example.com/user/eee",
-			wantCode:  http.StatusInternalServerError,
-			wantError: "some error",
-			wantResp:  `{"code":500,"message":"some error"}`,
 		},
 	}
 
@@ -86,23 +93,27 @@ func Test_userHandler_getUser_SQL_level(t *testing.T) {
 			userHandler := NewUserHandler(userService)
 			handleFunc := userHandler.GetMux()
 
+			user := newFakeUser(t)
+			url := fmt.Sprintf("http://example.com/user/%s", user.Login)
+
 			// prepare query response
 
-			if tt.wantError != "" {
-				dbMock.ExpectQuery(repository.SQLGetUser).WillReturnError(errors.New(tt.wantError))
+			if tt.closeError != nil {
+				dbMock.ExpectQuery(repository.SQLGetUser).WillReturnError(tt.closeError)
 			} else {
 				rows := sqlmock.NewRows([]string{"id", "loging", "name", "created_at", "updated_at"})
-				if tt.data != nil {
+				if tt.rowError != nil {
 					// add data to return rows
-					rows = rows.AddRow(tt.data.ID, tt.data.Login, tt.data.Name, tt.data.CreatedAt, tt.data.UpdatedAt)
+					rows = rows.CloseError(tt.rowError)
+				} else {
+					rows = rows.AddRow(user.ID, user.Login, user.Name, user.CreatedAt, user.UpdatedAt)
 				}
 				// set rows reding errors sql.ErrNoRows
-				rows = rows.CloseError(tt.closeError)
-				dbMock.ExpectQuery(repository.SQLGetUser).WithArgs(tt.login).WillReturnRows(rows)
+				dbMock.ExpectQuery(repository.SQLGetUser).WithArgs(user.Login).WillReturnRows(rows)
 			}
 
 			// create new request
-			r, err := http.NewRequest("GET", tt.url, nil)
+			r, err := http.NewRequest("GET", url, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -120,7 +131,11 @@ func Test_userHandler_getUser_SQL_level(t *testing.T) {
 
 			// assert status and data
 			assert.Equal(t, tt.wantCode, w.Code, "status code not match")
-			assert.JSONEqf(t, tt.wantResp, w.Body.String(), "response body not match")
+			if tt.wantCode == http.StatusOK {
+				assert.JSONEqf(t, user.toJSON(t), w.Body.String(), "response body not match")
+			} else {
+				assert.JSONEqf(t, tt.wantResp, w.Body.String(), "response body not match")
+			}
 		})
 	}
 }
