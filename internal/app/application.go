@@ -14,13 +14,9 @@ import (
 
 func NewApplication() *fx.App {
 	return fx.New(
-		fx.Provide(
-			fx.Annotate(
-				server.NewHTTPServer, fx.ParamTags(`group:"routes"`),
-			),
-		),
+		fx.Provide(paramRoutes(server.NewHTTPServer)),
 
-		fx.Provide(AsRoute(handler.NewUserHandler)),
+		fx.Provide(returnRoute(handler.NewUserHandler)),
 
 		fx.Provide(config.NewConfig),
 		fx.Provide(repository.NewUserDB),
@@ -32,7 +28,11 @@ func NewApplication() *fx.App {
 	)
 }
 
-func AsRoute(f any) any {
+func paramRoutes(f any) any {
+	return fx.Annotate(f, fx.ParamTags(`group:"routes"`))
+}
+
+func returnRoute(f any) any {
 	return fx.Annotate(
 		f,
 		fx.As(new(handler.HandlerInterface)),
