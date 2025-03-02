@@ -6,16 +6,19 @@ import (
 	"io"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/iliadmitriev/go-user-test/internal/domain"
 	"github.com/iliadmitriev/go-user-test/internal/service"
 )
 
-type UserHandlerInterface interface {
-	GetMux() *http.ServeMux
+type HandlerInterface interface {
+	GetMux(mux *http.ServeMux)
 }
 
 type userHandler struct {
 	userService service.UserServiceInterface
+	logger      *zap.Logger
 }
 
 type errorJSON struct {
@@ -23,11 +26,9 @@ type errorJSON struct {
 	Code    int    `json:"code"`
 }
 
-func (userhandler *userHandler) GetMux() *http.ServeMux {
-	mux := http.ServeMux{}
+func (userhandler *userHandler) GetMux(mux *http.ServeMux) {
 	mux.HandleFunc("/user/", userhandler.postUser)
 	mux.HandleFunc("/user/{login}", userhandler.getUser)
-	return &mux
 }
 
 func (userhandler *userHandler) postUser(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +38,8 @@ func (userhandler *userHandler) postUser(w http.ResponseWriter, r *http.Request)
 		serveErrorJSON(w, http.StatusBadRequest, errRead)
 		return
 	}
+
+	userhandler.logger.Info("Got request", zap.String("body", string(body)))
 
 	if err := json.Unmarshal(body, &userIn); err != nil {
 		serveErrorJSON(w, http.StatusBadRequest, err)
@@ -63,6 +66,8 @@ func (userhandler *userHandler) getUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	userhandler.logger.Info("Got request", zap.String("login", login))
+
 	if err != nil {
 		serveErrorJSON(w, http.StatusInternalServerError, err)
 		return
@@ -71,7 +76,7 @@ func (userhandler *userHandler) getUser(w http.ResponseWriter, r *http.Request) 
 	serveJSON(w, user, http.StatusOK)
 }
 
-func serveJSON(w http.ResponseWriter, v interface{}, code int) {
+func serveJSON(w http.ResponseWriter, v any, code int) {
 	w.WriteHeader(code)
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
@@ -85,8 +90,9 @@ func serveErrorJSON(w http.ResponseWriter, code int, err error) {
 	_ = encoder.Encode(errorJSON{Message: err.Error(), Code: code})
 }
 
-func NewUserHandler(userService service.UserServiceInterface) UserHandlerInterface {
+func NewUserHandler(userService service.UserServiceInterface, logger *zap.Logger) HandlerInterface {
 	return &userHandler{
 		userService,
+		logger.Named("userHandler"),
 	}
 }

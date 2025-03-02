@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/iliadmitriev/go-user-test/internal/db"
 	"github.com/iliadmitriev/go-user-test/internal/domain"
 )
 
@@ -13,17 +14,12 @@ var (
 	ErrUserLoginExists = errors.New("user with login already exists")
 )
 
-type DB interface {
-	ExecContext(context.Context, string, ...any) (sql.Result, error)
-	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
-}
-
-func NewUserDB(db DB) *UserDB {
+func NewUserDB(db db.DB) UserRepository {
 	return &UserDB{db}
 }
 
 type UserDB struct {
-	db DB
+	db db.DB
 }
 
 var _ UserRepository = (*UserDB)(nil)

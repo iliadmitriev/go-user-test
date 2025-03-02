@@ -31,10 +31,3 @@ func NewConfig() (*Config, error) {
 
 	return &cfg, nil
 }
-
-func MustConfig(cfg *Config, err error) *Config {
-	if err != nil {
-		panic(err)
-	}
-	return cfg
-}

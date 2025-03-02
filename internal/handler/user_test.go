@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 
 	"github.com/iliadmitriev/go-user-test/internal/domain"
 	"github.com/iliadmitriev/go-user-test/internal/mocks"
@@ -88,10 +89,12 @@ func Test_userHandler_getUser_SQL_level(t *testing.T) {
 			if err != nil {
 				t.Fatalf("err not expected: %v", err)
 			}
+			logger := zap.NewNop()
 			userRepository := repository.NewUserDB(db)
 			userService := service.NewUserService(userRepository)
-			userHandler := NewUserHandler(userService)
-			handleFunc := userHandler.GetMux()
+			userHandler := NewUserHandler(userService, logger)
+			mux := http.NewServeMux()
+			userHandler.GetMux(mux)
 
 			user := newFakeUser(t)
 			url := fmt.Sprintf("http://example.com/user/%s", user.Login)
@@ -122,7 +125,7 @@ func Test_userHandler_getUser_SQL_level(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			// run request
-			handleFunc.ServeHTTP(w, r)
+			mux.ServeHTTP(w, r)
 
 			// assert if db worked properly
 			if err := dbMock.ExpectationsWereMet(); err != nil {
@@ -189,10 +192,12 @@ func Test_userHandler_getUser_Repo_level(t *testing.T) {
 			t.Parallel()
 
 			// build whole stack mockRepo -> userService -> userHandler
+			logger := zap.NewNop()
 			mockUserRepo := mocks.NewUserRepository(t)
 			userService := service.NewUserService(mockUserRepo)
-			userHandler := NewUserHandler(userService)
-			handleFunc := userHandler.GetMux()
+			userHandler := NewUserHandler(userService, logger)
+			mux := http.NewServeMux()
+			userHandler.GetMux(mux)
 
 			// set user repo mock
 			// response once on method `getUser`
@@ -208,7 +213,7 @@ func Test_userHandler_getUser_Repo_level(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			// run request
-			handleFunc.ServeHTTP(w, r)
+			mux.ServeHTTP(w, r)
 
 			// assert
 			require.Equal(t, tt.wantCode, w.Code, "status code not match")
