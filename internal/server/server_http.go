@@ -48,7 +48,7 @@ func (srv *httpServer) Shutdown(ctx context.Context) error {
 	return srv.srv.Shutdown(ctx)
 }
 
-func NewHTTPServer(handlers []handler.HandlerInterface, lc fx.Lifecycle, cfg *config.Config, logger *zap.Logger) Server {
+func NewHTTPServer(handlers []handler.HTTPHandler, lc fx.Lifecycle, cfg *config.Config, logger *zap.Logger) Server {
 	mux := http.NewServeMux()
 
 	for _, handler := range handlers {

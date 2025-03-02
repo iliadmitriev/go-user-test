@@ -1,0 +1,18 @@
+version: v2
+modules:
+  - path: grpc
+lint:
+  except:
+    - ENUM_FIRST_VALUE_ZERO
+    - FIELD_NOT_REQUIRED
+    - IMPORT_USED
+    - PACKAGE_NO_IMPORT_CYCLE
+    - PACKAGE_VERSION_SUFFIX
+    - PROTOVALIDATE
+    - RPC_REQUEST_RESPONSE_UNIQUE
+    - RPC_RESPONSE_STANDARD_NAME
+  disallow_comment_ignores: true
+breaking:
+  except:
+    - EXTENSION_NO_DELETE
+    - FIELD_SAME_DEFAULT

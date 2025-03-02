@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	Listen       string        `yaml:"listen" env:"LISTEN" env-defautl:":8000"`
+	ListenGRPC   string        `yaml:"listen_grpc" env:"LISTEN_GRPC" env-defautl:":5000"`
 	StoragePath  string        `yaml:"storage_path" env:"STORAGE_PATH" env-defautl:"main.db"`
 	ReadTimeout  time.Duration `yaml:"read_timeout" env:"READ_TIMEOUT" env-defautl:"15s"`
 	WriteTimeout time.Duration `yaml:"write_timeout" env:"WRITE_TIMEOUT" env-defautl:"15s"`

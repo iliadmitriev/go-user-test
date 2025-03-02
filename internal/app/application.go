@@ -15,9 +15,31 @@ import (
 
 func NewApplication() *fx.App {
 	return fx.New(
-		fx.Provide(paramRoutes(server.NewHTTPServer)),
+		fx.Provide(fx.Annotate(
+			server.NewHTTPServer,
+			fx.ParamTags(`group:"http_routes"`),
+			fx.ResultTags(`group:"servers"`),
+			fx.As(new(server.Server)),
+		)),
 
-		fx.Provide(returnRoute(handler.NewUserHandler)),
+		fx.Provide(fx.Annotate(
+			server.NewGRPCServer,
+			fx.ParamTags(`group:"grpc_routes"`),
+			fx.ResultTags(`group:"servers"`),
+			fx.As(new(server.Server)),
+		)),
+
+		fx.Provide(fx.Annotate(
+			handler.NewUserHandler,
+			fx.ResultTags(`group:"http_routes"`),
+			fx.As(new(handler.HTTPHandler)),
+		)),
+
+		fx.Provide(fx.Annotate(
+			handler.NewGRPCUserHandler,
+			fx.ResultTags(`group:"grpc_routes"`),
+			fx.As(new(handler.GRPCHandler)),
+		)),
 
 		fx.Provide(config.NewConfig),
 		fx.Provide(repository.NewUserDB),
@@ -25,22 +47,13 @@ func NewApplication() *fx.App {
 		fx.Provide(db.NewSqliteDB),
 		fx.Provide(zap.NewProduction),
 
-		fx.Invoke(func(server.Server) {}),
+		fx.Invoke(fx.Annotate(
+			func([]server.Server) {},
+			fx.ParamTags(`group:"servers"`),
+		)),
 
 		fx.WithLogger(func(log *zap.Logger) fxevent.Logger {
 			return &fxevent.ZapLogger{Logger: log.Named("fx")}
 		}),
-	)
-}
-
-func paramRoutes(f any) any {
-	return fx.Annotate(f, fx.ParamTags(`group:"routes"`))
-}
-
-func returnRoute(f any) any {
-	return fx.Annotate(
-		f,
-		fx.As(new(handler.HandlerInterface)),
-		fx.ResultTags(`group:"routes"`),
 	)
 }

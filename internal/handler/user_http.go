@@ -12,13 +12,13 @@ import (
 	"github.com/iliadmitriev/go-user-test/internal/service"
 )
 
-type HandlerInterface interface {
+type HTTPHandler interface {
 	GetMux(mux *http.ServeMux)
 }
 
 type userHandler struct {
 	userService service.UserServiceInterface
-	logger      *zap.Logger
+	logger      *zap.SugaredLogger
 }
 
 type errorJSON struct {
@@ -39,7 +39,7 @@ func (userhandler *userHandler) postUser(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	userhandler.logger.Info("Got request", zap.String("body", string(body)))
+	userhandler.logger.Infow("Got request", "body", string(body))
 
 	if err := json.Unmarshal(body, &userIn); err != nil {
 		serveErrorJSON(w, http.StatusBadRequest, err)
@@ -66,7 +66,7 @@ func (userhandler *userHandler) getUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	userhandler.logger.Info("Got request", zap.String("login", login))
+	userhandler.logger.Infow("Got request", "login", login)
 
 	if err != nil {
 		serveErrorJSON(w, http.StatusInternalServerError, err)
@@ -90,9 +90,9 @@ func serveErrorJSON(w http.ResponseWriter, code int, err error) {
 	_ = encoder.Encode(errorJSON{Message: err.Error(), Code: code})
 }
 
-func NewUserHandler(userService service.UserServiceInterface, logger *zap.Logger) HandlerInterface {
+func NewUserHandler(userService service.UserServiceInterface, logger *zap.Logger) HTTPHandler {
 	return &userHandler{
 		userService,
-		logger.Named("UserHandler"),
+		logger.Named("UserHandler").Sugar(),
 	}
 }
