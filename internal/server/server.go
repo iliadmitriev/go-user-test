@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 
 	"github.com/iliadmitriev/go-user-test/internal/config"
@@ -18,16 +19,22 @@ type Server interface {
 
 type httpServer struct {
 	srv    *http.Server
-	logger *zap.Logger
+	logger *zap.SugaredLogger
 	cfg    *config.Config
 }
 
 func (srv *httpServer) Start(ctx context.Context) error {
-	go func(srv *httpServer) {
-		srv.logger.Info("Server started serving new connections", zap.String("addr", srv.cfg.Listen))
+	listener, err := net.Listen("tcp", srv.cfg.Listen)
+	if err != nil {
+		srv.logger.Errorw("Error starting server", "error", err)
+		return err
+	}
 
-		if err := srv.srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			srv.logger.Error("Server error", zap.Error(err))
+	go func(srv *httpServer) {
+		srv.logger.Infow("Server started serving new connections", "addr", srv.cfg.Listen)
+
+		if err := srv.srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
+			srv.logger.Errorw("Server error", "error", err)
 		}
 
 		srv.logger.Info("Server stopped serving new connections")
@@ -37,7 +44,7 @@ func (srv *httpServer) Start(ctx context.Context) error {
 }
 
 func (srv *httpServer) Shutdown(ctx context.Context) error {
-	srv.logger.Info("Server shutting down", zap.String("addr", srv.cfg.Listen))
+	srv.logger.Infow("Server shutting down", "addr", srv.cfg.Listen)
 	return srv.srv.Shutdown(ctx)
 }
 
@@ -48,14 +55,16 @@ func NewHTTPServer(handlers []handler.HandlerInterface, lc fx.Lifecycle, cfg *co
 		handler.GetMux(mux)
 	}
 
-	httpSrv := &http.Server{
-		Handler:      mux,
-		Addr:         cfg.Listen,
-		ReadTimeout:  cfg.ReadTimeout,
-		WriteTimeout: cfg.WriteTimeout,
+	srv := &httpServer{
+		srv: &http.Server{
+			Handler:      mux,
+			Addr:         cfg.Listen,
+			ReadTimeout:  cfg.ReadTimeout,
+			WriteTimeout: cfg.WriteTimeout,
+		},
+		cfg:    cfg,
+		logger: logger.Sugar().Named("HTTPServer"),
 	}
-
-	srv := &httpServer{srv: httpSrv, logger: logger.Named("HTTPServer"), cfg: cfg}
 
 	lc.Append(fx.Hook{
 		OnStart: srv.Start,

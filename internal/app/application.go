@@ -2,6 +2,7 @@ package app
 
 import (
 	"go.uber.org/fx"
+	"go.uber.org/fx/fxevent"
 	"go.uber.org/zap"
 
 	"github.com/iliadmitriev/go-user-test/internal/config"
@@ -25,6 +26,10 @@ func NewApplication() *fx.App {
 		fx.Provide(zap.NewProduction),
 
 		fx.Invoke(func(server.Server) {}),
+
+		fx.WithLogger(func(log *zap.Logger) fxevent.Logger {
+			return &fxevent.ZapLogger{Logger: log.Named("fx")}
+		}),
 	)
 }
 

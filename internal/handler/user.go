@@ -93,6 +93,6 @@ func serveErrorJSON(w http.ResponseWriter, code int, err error) {
 func NewUserHandler(userService service.UserServiceInterface, logger *zap.Logger) HandlerInterface {
 	return &userHandler{
 		userService,
-		logger.Named("userHandler"),
+		logger.Named("UserHandler"),
 	}
 }
