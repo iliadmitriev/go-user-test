@@ -12,33 +12,12 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+var _ Server = (*grpcServer)(nil)
+
 type grpcServer struct {
 	srv    *grpc.Server
 	logger *zap.SugaredLogger
 	cfg    *config.Config
-}
-
-func NewGRPCServer(handler []handler.GRPCHandler, lc fx.Lifecycle, cfg *config.Config, logger *zap.Logger) Server {
-	server := grpc.NewServer()
-
-	for _, handler := range handler {
-		handler.RegisterGRPC(server)
-	}
-
-	reflection.Register(server)
-
-	srv := &grpcServer{
-		srv:    server,
-		cfg:    cfg,
-		logger: logger.Sugar().Named("GRPCServer"),
-	}
-
-	lc.Append(fx.Hook{
-		OnStart: srv.Start,
-		OnStop:  srv.Shutdown,
-	})
-
-	return srv
 }
 
 func (srv *grpcServer) Start(ctx context.Context) error {
@@ -62,4 +41,27 @@ func (srv *grpcServer) Shutdown(ctx context.Context) error {
 	srv.logger.Infow("Server shutting down", "addr", srv.cfg.ListenGRPC)
 	srv.srv.GracefulStop()
 	return nil
+}
+
+func NewGRPCServer(handler []handler.GRPCHandler, lc fx.Lifecycle, cfg *config.Config, logger *zap.Logger) Server {
+	server := grpc.NewServer()
+
+	for _, handler := range handler {
+		handler.RegisterGRPC(server)
+	}
+
+	reflection.Register(server)
+
+	srv := &grpcServer{
+		srv:    server,
+		cfg:    cfg,
+		logger: logger.Sugar().Named("GRPCServer"),
+	}
+
+	lc.Append(fx.Hook{
+		OnStart: srv.Start,
+		OnStop:  srv.Shutdown,
+	})
+
+	return srv
 }

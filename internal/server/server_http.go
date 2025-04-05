@@ -12,6 +12,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var _ Server = (*httpServer)(nil)
+
 type Server interface {
 	Start(ctx context.Context) error
 	Shutdown(ctx context.Context) error
