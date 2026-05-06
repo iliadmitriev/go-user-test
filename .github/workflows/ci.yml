@@ -49,7 +49,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: '1.24'
           cache: true
 
       - name: Install buf
@@ -64,6 +64,9 @@ jobs:
 
       - name: Generate protobuf files
         run: buf generate
+
+      - name: Install mockery
+        run: go install github.com/vektra/mockery/v2@latest
 
       - name: Generate mocks
         run: go generate ./...
@@ -90,7 +93,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: '1.24'
           cache: true
 
       - name: Install buf
@@ -105,6 +108,12 @@ jobs:
 
       - name: Generate protobuf files
         run: buf generate
+
+      - name: Install mockery
+        run: go install github.com/vektra/mockery/v2@latest
+
+      - name: Generate mocks
+        run: go generate ./...
 
       - name: Build
         run: go build -o ./go-user cmd/main.go

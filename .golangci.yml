@@ -7,16 +7,11 @@ linters:
     - errcheck
     - staticcheck
     - unused
-
-linters-settings:
-  govet:
-    check-shadowing: true
+  exclusions:
+    paths:
+      - internal/mocks
 
 run:
   go: "1.24"
   timeout: 5m
   allow-parallel-runners: true
-
-issues:
-  exclude-dirs:
-    - internal/mocks
