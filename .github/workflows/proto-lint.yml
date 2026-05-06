@@ -3,20 +3,20 @@ name: Proto Lint
 on:
   push:
     branches:
-      - main
+      - master
     paths:
-      - 'grpc/**/*.proto'
-      - 'buf.yaml'
-      - 'buf.gen.yaml'
-      - '.github/workflows/proto-lint.yml'
+      - "grpc/**/*.proto"
+      - "buf.yaml"
+      - "buf.gen.yaml"
+      - ".github/workflows/proto-lint.yml"
   pull_request:
     branches:
-      - main
+      - master
     paths:
-      - 'grpc/**/*.proto'
-      - 'buf.yaml'
-      - 'buf.gen.yaml'
-      - '.github/workflows/proto-lint.yml'
+      - "grpc/**/*.proto"
+      - "buf.yaml"
+      - "buf.gen.yaml"
+      - ".github/workflows/proto-lint.yml"
 
 jobs:
   proto-lint:
@@ -41,11 +41,11 @@ jobs:
       - name: Run buf lint
         uses: bufbuild/buf-lint-action@v1
         with:
-          input: 'grpc'
+          input: "grpc"
 
       - name: Run buf breaking
         uses: bufbuild/buf-breaking-action@v1
         if: github.event_name == 'pull_request'
         with:
-          input: 'grpc'
-          against: 'https://github.com/${{ github.repository }}.git#branch=${{ github.base_ref }},subdir=grpc'
+          input: "grpc"
+          against: "https://github.com/${{ github.repository }}.git#branch=${{ github.base_ref }},subdir=grpc"
