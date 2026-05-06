@@ -1,18 +1,22 @@
+version: "2"
+
 linters:
+  default: none
   enable:
     - govet
     - errcheck
     - staticcheck
     - unused
-    - gosimple
-  disable-all: true
 
 linters-settings:
   govet:
     check-shadowing: true
 
 run:
-  go: '1.24'
+  go: "1.24"
   timeout: 5m
-  skip-dirs:
+  allow-parallel-runners: true
+
+issues:
+  exclude-dirs:
     - internal/mocks
