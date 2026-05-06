@@ -5,3 +5,6 @@
 /main.db
 
 /coverage.out
+
+/internal/server/grpc/user/v1
+/.zed

@@ -6,11 +6,17 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/iliadmitriev/go-user-test/internal/server/grpc/user/v1;user_proto";
 
+/*
+ * UserService main API to create and get user by ID
+ */
 service UserService {
+  // Create creates user with name, login and password
   rpc Create(CreateRequest) returns (CreateResponse);
+  // GetByLogin get login by ID
   rpc GetByLogin(GetByLoginRequest) returns (GetUserResponse);
 }
 
+// CreateRequest create user request with login, password and name
 message CreateRequest {
   string login = 1;
   string password = 2;
