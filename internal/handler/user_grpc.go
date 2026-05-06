@@ -12,7 +12,7 @@ import (
 	"github.com/iliadmitriev/go-user-test/internal/service"
 )
 
-//go:generate protoc -I=../../grpc/ --go_out=../../internal/server/grpc --go_opt=paths=source_relative --go-grpc_out=../../internal/server/grpc --go-grpc_opt=paths=source_relative ../../grpc/user/v1/user.proto
+//go:generate buf generate ../../
 
 type GRPCHandler interface {
 	RegisterGRPC(srv *grpc.Server)

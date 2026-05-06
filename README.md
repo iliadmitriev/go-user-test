@@ -10,8 +10,23 @@ sqlite3 main.db < main.sql
 
 ## Building
 
+Install required tools:
+
+```bash
+go install github.com/bufbuild/buf/cmd/buf@latest
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+```
+
+Generate gRPC stubs and mocks:
+
 ```bash
 go generate ./...
+```
+
+Build the application:
+
+```bash
 go build -o ./go-user cmd/main.go
 ```
 

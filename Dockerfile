@@ -1,1 +1,1 @@
-FROM --platform=arm64 alpine:latest
+FROM alpine:latest

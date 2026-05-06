@@ -1,0 +1,51 @@
+name: Proto Lint
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'grpc/**/*.proto'
+      - 'buf.yaml'
+      - 'buf.gen.yaml'
+      - '.github/workflows/proto-lint.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'grpc/**/*.proto'
+      - 'buf.yaml'
+      - 'buf.gen.yaml'
+      - '.github/workflows/proto-lint.yml'
+
+jobs:
+  proto-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install buf
+        uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ github.token }}
+
+      - name: Install protoc-gen-go plugins
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+      - name: Generate protobuf files
+        run: buf generate
+
+      - name: Run buf lint
+        uses: bufbuild/buf-lint-action@v1
+        with:
+          input: 'grpc'
+
+      - name: Run buf breaking
+        uses: bufbuild/buf-breaking-action@v1
+        if: github.event_name == 'pull_request'
+        with:
+          input: 'grpc'
+          against: 'https://github.com/${{ github.repository }}.git#branch=${{ github.base_ref }},subdir=grpc'
