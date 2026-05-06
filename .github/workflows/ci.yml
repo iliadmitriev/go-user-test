@@ -34,6 +34,12 @@ jobs:
       - name: Generate protobuf files
         run: buf generate
 
+      - name: Install mockery
+        run: go install github.com/vektra/mockery/v2@latest
+
+      - name: Generate mocks
+        run: go generate ./...
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
