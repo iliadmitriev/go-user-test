@@ -12,8 +12,6 @@ import (
 	"github.com/iliadmitriev/go-user-test/internal/service"
 )
 
-//go:generate buf generate ../../
-
 type GRPCHandler interface {
 	RegisterGRPC(srv *grpc.Server)
 }

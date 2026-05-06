@@ -21,6 +21,7 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 Generate gRPC stubs and mocks:
 
 ```bash
+buf generate
 go generate ./...
 ```
 
