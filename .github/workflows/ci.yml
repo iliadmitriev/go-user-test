@@ -81,7 +81,7 @@ jobs:
         run: go test -coverpkg=./internal/... -coverprofile coverage.out ./...
 
       - name: Upload coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage.out
@@ -125,7 +125,7 @@ jobs:
         run: go build -o ./go-user cmd/main.go
 
       - name: Upload binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: go-user-binary
           path: go-user
