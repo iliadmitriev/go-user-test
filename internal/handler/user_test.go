@@ -97,6 +97,9 @@ func Test_userHandler_getUser_SQL_level(t *testing.T) {
 			userHandler.GetMux(mux)
 
 			user := newFakeUser(t)
+			if user.Login == "" {
+				user.Login = "testuser"
+			}
 			url := fmt.Sprintf("http://example.com/user/%s", user.Login)
 
 			// prepare query response
