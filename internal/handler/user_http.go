@@ -33,6 +33,10 @@ func (userhandler *userHandler) GetMux(mux *http.ServeMux) {
 
 func (userhandler *userHandler) postUser(w http.ResponseWriter, r *http.Request) {
 	var userIn domain.UserIn
+	if r.Body == nil {
+		serveErrorJSON(w, http.StatusBadRequest, errors.New("empty request body"))
+		return
+	}
 	body, errRead := io.ReadAll(r.Body)
 	if errRead != nil {
 		serveErrorJSON(w, http.StatusBadRequest, errRead)
